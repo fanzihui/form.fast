@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="jquery-1.11.0.min.js"></script>
+    <script src="form.js"></script>
+    <style>
+.item-error {
+    color:red;
+}
+    </style>
+</head>
+<body>
+<h2>基础校验</h2>
+<div class="item">
+    <input type="text" id="basicUser">
+    <div class="item-error"></div>
+</div>
+<div class="item">
+    <input type="text" id="basicPwd">
+    <div class="item-error"></div>
+</div>
+<button type="button" id="basicSubmit" >checkAll</button>
+
+<script>
+var basicForm = new FormFast({
+    onError: function (msg, check) {
+        $(check.ref).next('.item-error').html(msg)
+    },
+    onPass: function (check) {
+        $(check.ref).next('.item-error').html('')
+    }
+})
+basicForm.check({
+    id: 'user',
+    ref: $('#basicUser'),
+    action: {
+        blur: function (done, value) {
+            if (!/\S/.test(value)) {
+                done('用户名必填');return
+            }
+            done();return
+        }
+    }
+})
+
+basicForm.check({
+    id: 'pwd',
+    ref: $('#basicPwd'),
+    action: {
+        blur: function (done, value) {
+            if (!/\S/.test(value)) {
+                done('密码必填');return
+            }
+            done();return
+        }
+    }
+})
+
+$('#basicSubmit').on('click', function () {
+    basicForm.checkAll(function (fail, errors) {
+        if (fail) {
+            errors[0].check.ref.focus()
+            console.log('基础校验失败',errors)
+        }
+        else {
+            console.log('基础校验通过')
+        }
+    })
+})
+</script>
+
+<h2>重复密码</h2>
+<div class="item">
+    <input type="text" placeholder="密码" id="repeatPwd">
+    <div class="item-error"></div>
+</div>
+<div class="item">
+    <input type="text" placeholder="重复密码" id="repeatRepeat">
+    <div class="item-error"></div>
+</div>
+<button type="button" id="repeatSubmit" >checkAll</button>
+
+<script>
+var repeatForm = new FormFast({
+    onError: function (msg, check) {
+        $(check.ref).next('.item-error').html('错误：' + msg)
+    },
+    onPass: function (check) {
+        $(check.ref).next('.item-error').html('')
+    }
+})
+repeatForm.check({
+    id: 'pwd',
+    ref: $('#repeatPwd'),
+    action: {
+        blur: function (done, value) {
+            if(value.length < 5) {
+                done('密码长度需要大于5');return
+            }
+            done();return
+
+        }
+    }
+})
+repeatForm.check({
+    id: 'repwd',
+    ref: $('#repeatRepeat'),
+    action: {
+        blur: function (done, value) {
+            if ($('#repeatPwd').val() !== value) {
+                done('2次输入的密码不一致');return
+            }
+            done();return
+
+        }
+    }
+})
+$('#repeatSubmit').on('click', function () {
+    repeatForm.checkAll(function (fail, errors) {
+        if (fail) {
+            errors[0].check.ref.focus()
+            console.log('重复密码校验失败',errors)
+        }
+        else {
+            console.log('重复密码校验通过')
+        }
+    })
+})
+</script>
+
+<h2>异步校验</h2>
+<div class="item">
+    <input type="text" placeholder="异步1" id="syncOne">
+    <div class="item-error"></div>
+</div>
+<div class="item">
+    <input type="text" placeholder="异步2" id="syncTow">
+    <div class="item-error"></div>
+</div>
+<button type="button" id="syncSubmit" >checkAll</button>
+<script>
+var syncForm = new FormFast({
+    onError: function (msg, check) {
+        $(check.ref).next('.item-error').html('异步错误：' + msg)
+    },
+    onPass: function (check) {
+        $(check.ref).next('.item-error').html('')
+    }
+})
+
+syncForm.check({
+    id: 'one',
+    ref: $('#syncOne'),
+    action: {
+        blur: function (done, value) {
+            setTimeout(function () {
+                if (value === 'abc') {
+                    done();return
+                }
+                else {
+                    done('必须输入abc');return
+                }
+            }, 500)
+        }
+    }
+})
+syncForm.check({
+    id: 'tow',
+    ref: $('#syncTow'),
+    action: {
+        blur: function (done, value) {
+            setTimeout(function () {
+                if (value === '123') {
+                    done();return
+                }
+                else {
+                    done('必须输入123');return
+                }
+            }, 200)
+        }
+    }
+})
+$('#syncSubmit').on('click', function () {
+    syncForm.checkAll(function (fail, errors) {
+        if (fail) {
+            errors[0].check.ref.focus()
+            console.log('异步校验失败',errors)
+        }
+        else {
+            console.log('异步校验通过')
+        }
+    })
+})
+</script>
+
+<h2>action</h2>
+<div class="item">
+    <input type="text" placeholder="input 时校验" id="actionOne">
+    <div class="item-error"></div>
+</div>
+
+<button type="button" id="actionSubmit" >checkAll</button>
+<script>
+var actionForm = new FormFast({
+    onError: function (msg, check, when) {
+        $(check.ref).next('.item-error').html(when + '-' + msg)
+    },
+    onPass: function (check, when) {
+        $(check.ref).next('.item-error').html('')
+    }
+})
+var actionInputCheck = function (done, value) {
+    if (!/\S/.test(value)) {
+        done('必填');return
+    }
+    if (/\d/.test(value)) {
+        done('不能出现数字');return
+    }
+    if (value.length > 5) {
+        done('不能超过5位');return
+    }
+    done();return
+}
+actionForm.check({
+    id: 'one',
+    ref: $('#actionOne'),
+    action: {
+        input: actionInputCheck,
+        final: actionInputCheck
+    }
+})
+$('#actionSubmit').on('click', function () {
+    actionForm.checkAll(function (fail, errors) {
+        if (fail) {
+            errors[0].check.ref.focus()
+            console.log('action 组合校验失败',errors)
+        }
+        else {
+            console.log('action 组合校验通过')
+        }
+    })
+})
+</script>
+
+<h2>校验第三方组件的值</h2>
+
+<pre>
+<input type="hidden" id="some" />
+
+someForm.check({
+    id: 'some',
+    ref: $('#some'),
+    action: {
+        final: function (done) {
+            if($('#other').val() !== 'abc') {
+                done('错误');return
+            }
+            done();return
+        }
+    }
+})
+</pre>
+
+</body>
+</html>
